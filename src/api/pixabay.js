@@ -1,3 +1,5 @@
+import axios from 'axios';
+
 const ITEMS_PER_PAGE = 40;
 
 export const getImages = async (searchQuery, page) => {  

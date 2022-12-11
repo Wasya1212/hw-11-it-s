@@ -1,12 +1,10 @@
-import axios from 'axios';
 import Notiflix from 'notiflix';
 import SimpleLightbox from 'simplelightbox';
 import 'simplelightbox/dist/simple-lightbox.min.css';
 
 import { genCardMarkup } from './helpers/gen-markup';
+import Pagination from './helpers/pagination';
 import { getImages } from './api/pixabay';
-
-const ITEMS_PER_PAGE = 40;
 
 const galleryContainer = document.querySelector('.gallery');
 
@@ -16,10 +14,10 @@ const gallery = new SimpleLightbox('.gallery a', {
 });
 
 // FOR PAGINATION
-let currentPage = 0;
+const pagination = new Pagination();
 let currentSearchQuery = '';
 
-const setImagesToGallery = async (searchQuery = currentSearchQuery) => {
+const genCardsList = async (searchQuery = currentSearchQuery) => {
   let galleryHtml = galleryContainer.innerHTML;
   
   if (currentSearchQuery !== searchQuery) {
@@ -28,21 +26,21 @@ const setImagesToGallery = async (searchQuery = currentSearchQuery) => {
     currentPage = 0;
   }
   
-  const { data } = await axios.get(`https://pixabay.com/api/?key=31831621-997ea1f90a535f6e50ab0825b&q=${currentSearchQuery}&image_type=photo&orientation=horizontal&safesearch=true&page=${++currentPage}&per_page=${ITEMS_PER_PAGE}`);
-
-  if (!data.hits.length) {
+  try {
+    const data = await getImages(currentSearchQuery, pagination.currentPage)
+    pagination.toNextPage();
+    return data.hits.reduce((html, hit) => html += genCardMarkup(hit), galleryHtml);
+  } catch (err) {
     Notiflix.Notify.failure('Sorry, there are no images matching your search query. Please try again.');
-    return currentPage--;
+    pagination.toPrevPage();
   }
-  
-  galleryContainer.innerHTML = data.hits.reduce((html, hit) => html += genCardMarkup(hit), galleryHtml);
-}
+};
 
 const loadBtn = document.querySelector('button.load-more');
 
 const loadMore = async (data) => {
   loadBtn.classList.add('hidden');
-  await setImagesToGallery(data);
+  galleryContainer.innerHTML = await genCardsList(data);
   gallery.refresh();
   loadBtn.classList.remove('hidden');
 }
