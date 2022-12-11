@@ -33,7 +33,11 @@ export default class Pagination {
     this.maxPage = page;
   }
 
-  isLastPage() {
+  get isLastPage() {
     return this.currentPage === this.maxPage;
+  }
+
+  get isFirstPage() {
+    return this.currentPage === 1;
   }
 }

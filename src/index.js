@@ -7,7 +7,9 @@ import Pagination from './helpers/pagination';
 const gallery = genGallery('.gallery');
 
 const pagination = new Pagination(1, 1);
+
 let currentSearchQuery = '';
+let endOfResults = false;
 
 const getCardsList = async (searchQuery, { onSuccess, onFail }) => {
   try {
@@ -22,21 +24,26 @@ const getCardsList = async (searchQuery, { onSuccess, onFail }) => {
 
 const loadBtn = document.querySelector('button.load-more');
 
-const loadMore = async (searchQuery = currentSearchQuery) => {
+const loadMore = async (searchQuery = currentSearchQuery, onSuccess) => {
   const isOldSearchQuery = searchQuery === currentSearchQuery;
   loadBtn.classList.add('hidden');
 
-  if (pagination.isLastPage() && isOldSearchQuery) return;
+  if (pagination.isLastPage && isOldSearchQuery) {
+    !endOfResults && !pagination.isFirstPage && Notiflix.Notify.info("We're sorry, but you've reached the end of search results.");
+    return !endOfResults && (endOfResults = true);
+  }
 
   if (!isOldSearchQuery) {
     currentSearchQuery = searchQuery;
     pagination.setPage(1);
+    endOfResults = false;
   }
 
   const cards = await getCardsList(currentSearchQuery, {
-    onSuccess: ({ totalHits }) => {
-      pagination.setMaxPage(Math.ceil(totalHits / ITEMS_PER_PAGE));
+    onSuccess: (data) => {
+      pagination.setMaxPage(Math.ceil(data.totalHits / ITEMS_PER_PAGE));
       pagination.toNextPage();
+      onSuccess?.(data);
     },
     onFail: () => {
       Notiflix.Notify.failure('Sorry, there are no images matching your search query. Please try again.');
@@ -62,10 +69,15 @@ const intersectionObserver = new IntersectionObserver(entries => {
 
 const onSubmit = async (e) => {
   e.preventDefault();
+
   const searchQuery = (new FormData(searchForm)).get('searchQuery');
+  
   if (!searchQuery) return;
-  await loadMore(searchQuery);
-  intersectionObserver.observe(loadBtn);
+  
+  await loadMore(searchQuery, ({ totalHits }) => {
+    Notiflix.Notify.success(`Hooray! We found ${totalHits} images.`);
+    intersectionObserver.observe(loadBtn);
+  });  
 };
 
 searchForm.addEventListener('submit', onSubmit);
