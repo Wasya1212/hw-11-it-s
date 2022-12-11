@@ -1,5 +1,5 @@
 export default class Pagination {
-  constructor(currentPage = 0, maxPage = -1) {
+  constructor(currentPage = 1, maxPage = -1) {
     this.currentPage = currentPage;
     this.maxPage = maxPage;
   }
@@ -9,8 +9,8 @@ export default class Pagination {
   }
 
   checkPage(page) {
-    if (page >= 0 && this.maxPage === -1) return true;
-    return page >=0 && this.maxPage && page <= this.maxPage;
+    if (page >= 1 && this.maxPage === -1) return true;
+    return page >= 1 && this.maxPage && page <= this.maxPage;
   }
 
   toNextPage() {

@@ -16,7 +16,7 @@ const gallery = new SimpleLightbox('.gallery a', {
 const pagination = new Pagination(1, 1);
 let currentSearchQuery = '';
 
-const genCardsList = async (searchQuery) => {  
+const genCardsList = async (searchQuery) => {
   try {
     const { hits, totalHits } = await getImages(searchQuery, pagination.currentPage)
     pagination.setMaxPage(Math.ceil(totalHits / ITEMS_PER_PAGE));
@@ -25,12 +25,15 @@ const genCardsList = async (searchQuery) => {
   } catch (err) {
     Notiflix.Notify.failure('Sorry, there are no images matching your search query. Please try again.');
     pagination.toPrevPage();
+    return '';
   }
 };
 
 const loadBtn = document.querySelector('button.load-more');
 
 const loadMore = async (searchQuery = currentSearchQuery) => {
+  loadBtn.classList.add('hidden');
+
   if (pagination.isLastPage() && searchQuery === currentSearchQuery) return;
   
   let html = '';
@@ -42,13 +45,12 @@ const loadMore = async (searchQuery = currentSearchQuery) => {
     html = galleryContainer.innerHTML;
   }
   
-  loadBtn.classList.add('hidden');
   galleryContainer.innerHTML = html + await genCardsList(currentSearchQuery);
   gallery.refresh();
   loadBtn.classList.remove('hidden');
 };
 
-loadBtn.addEventListener('click', loadMore);
+loadBtn.addEventListener('click', () => loadMore());
 
 const searchForm = document.querySelector('form.search-form');
 
@@ -61,8 +63,11 @@ const onSubmit = async (e) => {
   e.preventDefault();
 
   const searchQuery = (new FormData(searchForm)).get('searchQuery');
+
+  if (!searchQuery) return;
+
   await loadMore(searchQuery);
-  intersectionObserver.observe(document.querySelector(".load-more"));
+  intersectionObserver.observe(document.querySelector('.load-more'));
 };
 
 searchForm.addEventListener('submit', onSubmit);
