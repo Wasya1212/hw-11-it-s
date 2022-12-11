@@ -4,7 +4,7 @@ import 'simplelightbox/dist/simple-lightbox.min.css';
 
 import { genCardMarkup } from './helpers/gen-markup';
 import Pagination from './helpers/pagination';
-import { getImages } from './api/pixabay';
+import { getImages, ITEMS_PER_PAGE } from './api/pixabay';
 
 const galleryContainer = document.querySelector('.gallery');
 
@@ -27,9 +27,10 @@ const genCardsList = async (searchQuery = currentSearchQuery) => {
   }
   
   try {
-    const data = await getImages(currentSearchQuery, pagination.currentPage)
+    const { hits, totalHits } = await getImages(currentSearchQuery, pagination.currentPage)
+    pagination.setMaxPage(Math.floor(totalHits / ITEMS_PER_PAGE));
     pagination.toNextPage();
-    return data.hits.reduce((html, hit) => html += genCardMarkup(hit), galleryHtml);
+    return hits.reduce((html, hit) => html += genCardMarkup(hit), galleryHtml);
   } catch (err) {
     Notiflix.Notify.failure('Sorry, there are no images matching your search query. Please try again.');
     pagination.toPrevPage();
@@ -39,6 +40,8 @@ const genCardsList = async (searchQuery = currentSearchQuery) => {
 const loadBtn = document.querySelector('button.load-more');
 
 const loadMore = async (data) => {
+  if (pagination.isLastPage()) return;
+  
   loadBtn.classList.add('hidden');
   galleryContainer.innerHTML = await genCardsList(data);
   gallery.refresh();

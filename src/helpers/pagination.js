@@ -1,7 +1,7 @@
 export default class Pagination {
-  constructor(currentPage = 0) {
+  constructor(currentPage = 0, maxPage = -1) {
     this.currentPage = currentPage;
-    this.maxPage = 1;
+    this.maxPage = maxPage;
   }
 
   getPageError() {
@@ -9,26 +9,31 @@ export default class Pagination {
   }
 
   checkPage(page) {
+    if (page >= 0 && this.maxPage === -1) return true;
     return page >=0 && this.maxPage && page <= this.maxPage;
   }
 
   toNextPage() {
-    if (!this.checkPage()) return this.getPageError();
+    if (!this.checkPage(this.currentPage + 1)) return;
     this.currentPage++;
   }
 
   toPrevPage() {
-    if (!this.checkPage()) return this.getPageError();
+    if (!this.checkPage(this.currentPage - 1)) return;
     this.currentPage--;
   }
 
   setPage(page) {
-    if (!this.checkPage()) return this.getPageError();
+    if (!this.checkPage(page)) return this.getPageError();
     this.currentPage = page;
   }
 
   setMaxPage(page) {
     if (page <= 0) return this.getPageError();
     this.maxPage = page;
+  }
+
+  isLastPage() {
+    return this.currentPage === this.maxPage;
   }
 }
