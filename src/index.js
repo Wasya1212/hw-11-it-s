@@ -14,7 +14,7 @@ const gallery = new SimpleLightbox('.gallery a', {
 });
 
 // FOR PAGINATION
-const pagination = new Pagination();
+const pagination = new Pagination(1);
 let currentSearchQuery = '';
 
 const genCardsList = async (searchQuery = currentSearchQuery) => {
@@ -23,7 +23,7 @@ const genCardsList = async (searchQuery = currentSearchQuery) => {
   if (currentSearchQuery !== searchQuery) {
     currentSearchQuery = searchQuery;
     galleryHtml = '';
-    currentPage = 0;
+    pagination.setPage(1);
   }
   
   try {
