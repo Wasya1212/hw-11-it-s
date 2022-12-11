@@ -1,37 +1,12 @@
 import axios from 'axios';
 import Notiflix from 'notiflix';
 import SimpleLightbox from 'simplelightbox';
-import { debounce } from 'lodash';
 import 'simplelightbox/dist/simple-lightbox.min.css';
 
-const PAGE_OFFSET = 50;
-const ITEMS_PER_PAGE = 40;
+import { genCardMarkup } from './helpers/gen-markup';
+import { getImages } from './api/pixabay';
 
-const genCardMarkup = (data) => `
-  <div class="photo-card">
-    <a href="${data.largeImageURL}">
-      <img src="${data.webformatURL}" alt="${data.tags}" loading="lazy" />
-    </a>
-    <div class="info">
-      <p class="info-item">
-        <b>Likes</b>
-        <span>${data.likes}</span>
-      </p>
-      <p class="info-item">
-        <b>Views</b>
-        <span>${data.views}</span>
-      </p>
-      <p class="info-item">
-        <b>Comments</b>
-        <span>${data.comments}</span>
-      </p>
-      <p class="info-item">
-        <b>Downloads</b>
-        <span>${data.downloads}</span>
-      </p>
-    </div>
-  </div>
-`;
+const ITEMS_PER_PAGE = 40;
 
 const galleryContainer = document.querySelector('.gallery');
 
@@ -76,23 +51,16 @@ loadBtn.addEventListener('click', loadMore);
 
 const searchForm = document.querySelector('form.search-form');
 
-const bottomTrigger = debounce(() => {
-  if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - PAGE_OFFSET) {
-    loadMore();    
-  }
-}, 300);
+const intersectionObserver = new IntersectionObserver(entries => {
+  if (entries[0].intersectionRatio <= 0) return;
+  loadMore((new FormData(searchForm)).get('searchQuery'));
+});
 
 const onSubmit = async (e) => {
   e.preventDefault();
 
   await loadMore((new FormData(searchForm)).get('searchQuery'));
-
-  try {
-    document.removeEventListener('scroll', bottomTrigger);
-    document.addEventListener('scroll', bottomTrigger);
-  } catch (err) {
-    console.error(err);
-  }
+  intersectionObserver.observe(document.querySelector(".load-more"));
 };
 
 searchForm.addEventListener('submit', onSubmit);
