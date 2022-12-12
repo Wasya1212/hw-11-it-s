@@ -14,12 +14,10 @@ export default class Pagination {
   }
 
   toNextPage() {
-    if (!this.checkPage(this.currentPage + 1)) return;
     this.currentPage++;
   }
 
   toPrevPage() {
-    if (!this.checkPage(this.currentPage - 1)) return;
     this.currentPage--;
   }
 

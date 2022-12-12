@@ -28,9 +28,11 @@ const loadMore = async (searchQuery = currentSearchQuery, onSuccess) => {
   const isOldSearchQuery = searchQuery === currentSearchQuery;
   loadBtn.classList.add('hidden');
 
+  if (pagination.currentPage > pagination.maxPage) return pagination.setPage(pagination.maxPage);
+
   if (pagination.isLastPage && isOldSearchQuery) {
     !endOfResults && !pagination.isFirstPage && Notiflix.Notify.info("We're sorry, but you've reached the end of search results.");
-    return !endOfResults && (endOfResults = true);
+    !endOfResults && (endOfResults = true);
   }
 
   if (!isOldSearchQuery) {
@@ -42,7 +44,7 @@ const loadMore = async (searchQuery = currentSearchQuery, onSuccess) => {
   const cards = await getCardsList(currentSearchQuery, {
     onSuccess: (data) => {
       pagination.setMaxPage(Math.ceil(data.totalHits / ITEMS_PER_PAGE));
-      pagination.toNextPage();
+      loadBtn.classList.remove('hidden');
       onSuccess?.(data);
     },
     onFail: () => {
@@ -52,11 +54,13 @@ const loadMore = async (searchQuery = currentSearchQuery, onSuccess) => {
   });
 
   setItems(cards, gallery, isOldSearchQuery);
-  loadBtn.classList.remove('hidden');
 };
 
 
-loadBtn.addEventListener('click', () => loadMore());
+loadBtn.addEventListener('click', () => {
+  pagination.toNextPage();
+  loadMore();
+});
 
 // MANAGE SEARCH FORM
 
@@ -64,6 +68,7 @@ const searchForm = document.querySelector('form.search-form');
 
 const intersectionObserver = new IntersectionObserver(entries => {
   if (entries[0].intersectionRatio <= 0) return;
+  pagination.toNextPage();
   loadMore();
 });
 
